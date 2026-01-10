@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌱 Control de Riego - Sistema IoT</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.9em;
+      backdrop-filter: blur(10px);
+    }
+
+    .status-badge.online {
+      background: #4CAF50;
+    }
+
+    .status-badge.offline {
+      background: #f44336;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .card-icon {
+      font-size: 2em;
+      margin-right: 15px;
+    }
+
+    .card-title {
+      font-size: 0.9em;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-value {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .card-unit {
+      font-size: 0.5em;
+      color: #999;
+      margin-left: 5px;
+    }
+
+    .card-timestamp {
+      font-size: 0.8em;
+      color: #999;
+      margin-top: 10px;
+    }
+
+    .control-panel {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+    }
+
+    .control-panel h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      min-width: 200px;
+      padding: 20px 30px;
+      font-size: 1.1em;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      color: white;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #45a049, #3d8b40);
+      transform: translateY(-2px);
+      box-shadow: 0 7px 20px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, #1976D2, #1565C0);
+      transform: translateY(-2px);
+      box-shadow: 0 7px 20px rgba(33, 150, 243, 0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #d32f2f, #c62828);
+      transform: translateY(-2px);
+      box-shadow: 0 7px 20px rgba(244, 67, 54, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+      display: block;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+      display: block;
+    }
+
+    .alert.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border-left: 4px solid #17a2b8;
+      display: block;
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+    }
+
+    .chart-container h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    iframe {
+      width: 100%;
+      height: 300px;
+      border: none;
+      border-radius: 10px;
+    }
+
+    .pump-status {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: pulse 2s infinite;
+    }
+
+    .pump-status.on {
+      background: #4CAF50;
+      box-shadow: 0 0 10px #4CAF50;
+    }
+
+    .pump-status.off {
+      background: #ccc;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      margin-top: 40px;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.8em;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      button {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌱 Sistema de Riego Inteligente</h1>
+      <div class="status-badge" id="connectionStatus">
+        <span id="statusText">Conectando...</span>
+      </div>
+    </header>
+
+    <div id="alertContainer"></div>
+
+    <!-- Tarjetas de Datos en Tiempo Real -->
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🌡️</div>
+          <div class="card-title">Temperatura</div>
+        </div>
+        <div class="card-value" id="temp">--<span class="card-unit">°C</span></div>
+        <div class="card-timestamp" id="tempTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">💧</div>
+          <div class="card-title">Humedad</div>
+        </div>
+        <div class="card-value" id="hum">--<span class="card-unit">%</span></div>
+        <div class="card-timestamp" id="humTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">💨</div>
+          <div class="card-title">DPV</div>
+        </div>
+        <div class="card-value" id="dpv">--<span class="card-unit">kPa</span></div>
+        <div class="card-timestamp" id="dpvTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">💡</div>
+          <div class="card-title">DLI</div>
+        </div>
+        <div class="card-value" id="dli">--<span class="card-unit">mol/m²</span></div>
+        <div class="card-timestamp" id="dliTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">☀️</div>
+          <div class="card-title">Luminosidad</div>
+        </div>
+        <div class="card-value" id="lux">--<span class="card-unit">lux</span></div>
+        <div class="card-timestamp" id="luxTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🚿</div>
+          <div class="card-title">Riegos Hoy</div>
+        </div>
+        <div class="card-value" id="riegos">--<span class="card-unit">veces</span></div>
+        <div class="card-timestamp" id="riegosTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">Energía Acum.</div>
+        </div>
+        <div class="card-value" id="energia">--<span class="card-unit">kJ</span></div>
+        <div class="card-timestamp" id="energiaTime">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⚙️</div>
+          <div class="card-title">Bomba</div>
+        </div>
+        <div class="card-value" id="bomba">
+          --
+          <span class="pump-status off" id="pumpIndicator"></span>
+        </div>
+        <div class="card-timestamp" id="bombaTime">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Panel de Control -->
+    <div class="control-panel">
+      <h2>⚙️ Panel de Control</h2>
+      <div class="button-group">
+        <button class="btn-primary" onclick="activarRiego(4)">
+          💧 Riego 4 minutos
+        </button>
+        <button class="btn-secondary" onclick="activarRiego(2)">
+          💦 Riego Corto (2 min)
+        </button>
+        <button class="btn-secondary" onclick="actualizarDatos()">
+          🔄 Actualizar Datos
+        </button>
+      </div>
+    </div>
+
+    <!-- Gráficas de ThingSpeak -->
+    <div class="chart-container">
+      <h2>📊 Gráficas en Tiempo Real</h2>
+      <p style="color: #666; margin-bottom: 20px;">
+        Completa tu configuración abajo para ver las gráficas de ThingSpeak
+      </p>
+      <div id="chartsContainer">
+        <!-- Las gráficas se cargarán aquí -->
+      </div>
+    </div>
+
+    <footer>
+      <p>Sistema de Riego IoT - Última actualización: <span id="lastUpdate">--</span></p>
+      <p style="font-size: 0.9em; margin-top: 10px;">Desarrollado con ❤️ para agricultura inteligente</p>
+    </footer>
+  </div>
+
+  <script>
+    // ========================================
+    // CONFIGURACIÓN - ¡EDITA ESTOS VALORES!
+    // ========================================
+    const CONFIG = {
+      WRITE_API_KEY: 'TPVDC86JF48WH99X',
+      READ_API_KEY: 'G5R9QLNA60D3NAQC',  // Opcional, para más seguridad
+      CHANNEL_ID: '3224560',
+      UPDATE_INTERVAL: 20000  // 20 segundos
+    };
+
+    // ========================================
+    // NO NECESITAS EDITAR NADA MÁS ABAJO
+    // ========================================
+
+    let updateTimer;
+
+    function showAlert(message, type = 'info') {
+      const alertContainer = document.getElementById('alertContainer');
+      const alert = document.createElement('div');
+      alert.className = `alert ${type}`;
+      alert.innerHTML = `<strong>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</strong> ${message}`;
+      
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(alert);
+
+      setTimeout(() => {
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 300);
+      }, 5000);
+    }
+
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('es-MX', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    async function actualizarDatos() {
+      try {
+        document.getElementById('statusText').textContent = 'Actualizando...';
+        
+        const url = `https://api.thingspeak.com/channels/${CONFIG.CHANNEL_ID}/feeds/last.json`;
+        const response = await fetch(url);
+        
+        if (!response.ok) throw new Error('Error al obtener datos');
+        
+        const data = await response.json();
+        
+        // Actualizar valores
+        document.getElementById('temp').innerHTML = `${parseFloat(data.field1 || 0).toFixed(1)}<span class="card-unit">°C</span>`;
+        document.getElementById('hum').innerHTML = `${parseFloat(data.field2 || 0).toFixed(1)}<span class="card-unit">%</span>`;
+        document.getElementById('dpv').innerHTML = `${parseFloat(data.field3 || 0).toFixed(2)}<span class="card-unit">kPa</span>`;
+        document.getElementById('dli').innerHTML = `${parseFloat(data.field4 || 0).toFixed(2)}<span class="card-unit">mol/m²</span>`;
+        document.getElementById('energia').innerHTML = `${parseFloat(data.field5 || 0).toFixed(2)}<span class="card-unit">kJ</span>`;
+        document.getElementById('lux').innerHTML = `${parseFloat(data.field6 || 0).toFixed(0)}<span class="card-unit">lux</span>`;
+        document.getElementById('riegos').innerHTML = `${parseInt(data.field7 || 0)}<span class="card-unit">veces</span>`;
+        
+        const bombaEstado = parseInt(data.field8) === 1;
+        document.getElementById('bomba').innerHTML = `${bombaEstado ? 'ON' : 'OFF'} <span class="pump-status ${bombaEstado ? 'on' : 'off'}" id="pumpIndicator"></span>`;
+        
+        // Actualizar timestamps
+        const time = formatTime(data.created_at);
+        document.querySelectorAll('[id$="Time"]').forEach(el => {
+          el.textContent = `Actualizado: ${time}`;
+        });
+        
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleString('es-MX');
+        document.getElementById('connectionStatus').className = 'status-badge online';
+        document.getElementById('statusText').textContent = '🟢 Conectado';
+        
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('connectionStatus').className = 'status-badge offline';
+        document.getElementById('statusText').textContent = '🔴 Sin conexión';
+        showAlert('Error al actualizar datos. Verifica tu configuración.', 'error');
+      }
+    }
+
+    async function activarRiego(minutos) {
+      if (!confirm(`¿Activar riego por ${minutos} minutos?`)) return;
+
+      try {
+        // Mostrar en interfaz
+        showAlert(`Activando riego de ${minutos} minutos...`, 'info');
+        
+        const url = `https://api.thingspeak.com/update?api_key=${CONFIG.WRITE_API_KEY}&field8=99`;
+        const response = await fetch(url);
+        const entryId = await response.text();
+        
+        if (entryId && entryId !== '0') {
+          showAlert(`✅ Riego activado exitosamente! (Entry ID: ${entryId})`, 'success');
+          
+          // Actualizar datos después de 5 segundos
+          setTimeout(actualizarDatos, 5000);
+        } else {
+          throw new Error('Respuesta inválida de ThingSpeak');
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('❌ Error al activar riego. Verifica tu API Key.', 'error');
+      }
+    }
+
+    function cargarGraficas() {
+      const chartsContainer = document.getElementById('chartsContainer');
+      
+      if (!CONFIG.CHANNEL_ID || CONFIG.CHANNEL_ID === 'TU_CHANNEL_ID_AQUI') {
+        chartsContainer.innerHTML = `
+          <div style="padding: 30px; text-align: center; background: #f8f9fa; border-radius: 10px;">
+            <h3 style="color: #666; margin-bottom: 15px;">⚙️ Configuración Pendiente</h3>
+            <p style="color: #999;">Edita el código HTML y reemplaza:</p>
+            <ul style="list-style: none; padding: 0; margin-top: 15px;">
+              <li style="margin: 10px 0;">📝 <code>WRITE_API_KEY</code></li>
+              <li style="margin: 10px 0;">📝 <code>READ_API_KEY</code></li>
+              <li style="margin: 10px 0;">📝 <code>CHANNEL_ID</code></li>
+            </ul>
+          </div>
+        `;
+        return;
+      }
+
+      chartsContainer.innerHTML = `
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Temperatura&type=line"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/2?bgcolor=%23ffffff&color=%232020d6&dynamic=true&results=60&title=Humedad&type=line"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/4?bgcolor=%23ffffff&color=%23ffa500&dynamic=true&results=60&title=DLI&type=line"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/6?bgcolor=%23ffffff&color=%23ffcc00&dynamic=true&results=60&title=Luminosidad&type=line"></iframe>
+      `;
+    }
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+      actualizarDatos();
+      cargarGraficas();
+      
+      // Actualizar automáticamente
+      updateTimer = setInterval(actualizarDatos, CONFIG.UPDATE_INTERVAL);
+      
+      showAlert('Sistema iniciado. Actualizaciones automáticas activadas.', 'success');
+    });
+
+    // Limpiar timer al cerrar
+    window.addEventListener('beforeunload', () => {
+      if (updateTimer) clearInterval(updateTimer);
+    });
+  </script>
+</body>
+</html>
