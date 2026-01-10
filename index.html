@@ -535,10 +535,19 @@
       }
 
       chartsContainer.innerHTML = `
+        <h3 style="margin: 20px 0 10px 0; color: #666;">🌡️ Clima</h3>
         <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Temperatura&type=line"></iframe>
         <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/2?bgcolor=%23ffffff&color=%232020d6&dynamic=true&results=60&title=Humedad&type=line"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/3?bgcolor=%23ffffff&color=%2300aaff&dynamic=true&results=60&title=DPV&type=line"></iframe>
+        
+        <h3 style="margin: 30px 0 10px 0; color: #666;">💡 Luz</h3>
         <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/4?bgcolor=%23ffffff&color=%23ffa500&dynamic=true&results=60&title=DLI&type=line"></iframe>
         <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/6?bgcolor=%23ffffff&color=%23ffcc00&dynamic=true&results=60&title=Luminosidad&type=line"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/5?bgcolor=%23ffffff&color=%23ff6600&dynamic=true&results=60&title=Energia%20Acumulada&type=line"></iframe>
+        
+        <h3 style="margin: 30px 0 10px 0; color: #666;">💧 Riego</h3>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/7?bgcolor=%23ffffff&color=%234caf50&dynamic=true&results=60&title=Contador%20de%20Riegos&type=column"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/8?bgcolor=%23ffffff&color=%23ff4444&dynamic=true&results=60&title=Estado%20Bomba&type=stepline"></iframe>
       `;
     }
 
@@ -561,3 +570,4 @@
 </body>
 
 </html>
+
