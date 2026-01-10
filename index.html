@@ -289,7 +289,7 @@
 <body>
   <div class="container">
     <header>
-      <h1>🌱 Sistema de Riego Leana</h1>
+      <h1>🌱 Sistema de Riego Inteligente</h1>
       <div class="status-badge" id="connectionStatus">
         <span id="statusText">Conectando...</span>
       </div>
@@ -497,15 +497,18 @@
         // Mostrar en interfaz
         showAlert(`Activando riego de ${minutos} minutos...`, 'info');
         
-        const url = `https://api.thingspeak.com/update?api_key=${CONFIG.WRITE_API_KEY}&field8=99`;
+        // Código diferente según duración
+        const codigo = minutos === 4 ? '99' : '98';
+        
+        const url = `https://api.thingspeak.com/update?api_key=${CONFIG.WRITE_API_KEY}&field8=${codigo}`;
         const response = await fetch(url);
         const entryId = await response.text();
         
         if (entryId && entryId !== '0') {
-          showAlert(`✅ Riego activado exitosamente! (Entry ID: ${entryId})`, 'success');
+          showAlert(`✅ Riego de ${minutos} min activado! El ESP32 lo ejecutará en máximo 15 segundos.`, 'success');
           
-          // Actualizar datos después de 5 segundos
-          setTimeout(actualizarDatos, 5000);
+          // Actualizar datos después de 10 segundos
+          setTimeout(actualizarDatos, 10000);
         } else {
           throw new Error('Respuesta inválida de ThingSpeak');
         }
@@ -546,7 +549,7 @@
         <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/5?bgcolor=%23ffffff&color=%23ff6600&dynamic=true&results=60&title=Energia%20Acumulada&type=line"></iframe>
         
         <h3 style="margin: 30px 0 10px 0; color: #666;">💧 Riego</h3>
-        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/7?bgcolor=%23ffffff&color=%234caf50&dynamic=true&results=60&title=Contador%20de%20Riegos&type=column"></iframe>
+        <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/7?bgcolor=%23ffffff&color=%234caf50&dynamic=true&results=60&title=Contador%20de%20Riegos&type=line"></iframe>
         <iframe src="https://thingspeak.com/channels/${CONFIG.CHANNEL_ID}/charts/8?bgcolor=%23ffffff&color=%23ff4444&dynamic=true&results=60&title=Estado%20Bomba&type=column"></iframe>
       `;
     }
@@ -568,10 +571,4 @@
     });
   </script>
 </body>
-
 </html>
-
-
-
-
-
